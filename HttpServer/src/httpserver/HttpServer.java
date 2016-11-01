@@ -70,7 +70,7 @@ class HttpRequestHandler {
         try {
             // on ouvre un flux de converation
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            inBuf = new BufferedInputStream(new ObjectInputStream(clientSocket.getInputStream()));
+            inBuf = new BufferedInputStream(clientSocket.getInputStream());
             out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
             /* Get request type, url and version. */
             String s;
