@@ -58,9 +58,8 @@ class ServerConnection extends Thread {
 
 class HttpRequestHandler {
 
-    BufferedReader in;
-    BufferedWriter out;
-    BufferedInputStream inBuf;
+    DataInputStream in;
+    DataOutputStream out;
     Hashtable<String, String> cHeader = new Hashtable<String, String>();
     String sReqType;
     String sReqVersion;
@@ -69,9 +68,8 @@ class HttpRequestHandler {
     HttpRequestHandler(Socket clientSocket) {
         try {
             // on ouvre un flux de converation
-            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            inBuf = new BufferedInputStream(clientSocket.getInputStream());
-            out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
+            in = new DataInputStream(clientSocket.getInputStream());
+            out = new DataOutputStream(clientSocket.getOutputStream());
             /* Get request type, url and version. */
             String s;
             s = in.readLine();
@@ -109,7 +107,7 @@ class HttpRequestHandler {
                     System.out.println(cString.toString());
                 } else {
                     byte[] bFileInBytes = new byte[iLength];
-                    inBuf.read(bFileInBytes, 0, iLength);
+                    in.read(bFileInBytes, 0, iLength);
                     FileOutputStream fileoutputstream = new FileOutputStream("outputfile");
                     BufferedOutputStream bufferedoutput = new BufferedOutputStream(fileoutputstream);
                     bufferedoutput.write(bFileInBytes, 0, bFileInBytes.length);
@@ -120,15 +118,15 @@ class HttpRequestHandler {
             File fFile = new File("src/index.html");
             String sFile = FileUtils.readFileToString(fFile, "UTF-8");
 
-            out.write("HTTP/1.1 200 OK\r\n");
-            out.write("Date: Fri, 31 Dec 1999 23:59:59 GMT\r\n");
-            out.write("Server: Apache/0.8.4\r\n");
-            out.write("Content-Type: text/html\r\n");
-            out.write("Content-Length: " + sFile.length() + "\r\n");
-            out.write("Expires: Sat, 01 Jan 2000 00:59:59 GMT\r\n");
-            out.write("Last-modified: Fri, 09 Aug 1996 14:21:40 GMT\r\n");
-            out.write("\r\n");
-            out.write(sFile);
+            out.write("HTTP/1.1 200 OK\r\n".getBytes());
+            out.write("Date: Fri, 31 Dec 1999 23:59:59 GMT\r\n".getBytes());
+            out.write("Server: Apache/0.8.4\r\n".getBytes());
+            out.write("Content-Type: text/html\r\n".getBytes());
+            out.write(("Content-Length: " + sFile.length() + "\r\n").getBytes());
+            out.write("Expires: Sat, 01 Jan 2000 00:59:59 GMT\r\n".getBytes());
+            out.write("Last-modified: Fri, 09 Aug 1996 14:21:40 GMT\r\n".getBytes());
+            out.write("\r\n".getBytes());
+            out.write(sFile.getBytes());
             // on ferme les flux.
             System.err.println("Connexion avec le client terminée");
             out.close();
