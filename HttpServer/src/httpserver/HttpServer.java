@@ -51,8 +51,11 @@ class ServerConnection extends Thread {
 
     public ServerConnection(Socket aClientSocket) throws IOException {
         System.out.println("Thread for new client.");
-        cHttpRequestHdlr = new HttpRequestHandler(aClientSocket);
-        this.start();
+        if(aClientSocket != null)
+        {
+            cHttpRequestHdlr = new HttpRequestHandler(aClientSocket);
+            this.start();
+        }
     }
 
     public void run() {
