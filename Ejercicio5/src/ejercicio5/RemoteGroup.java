@@ -15,26 +15,32 @@ import java.util.List;
  * @author AlumnosA14
  */
 public class RemoteGroup {
+
     public String name;
-    public List<InfoClient> Clients = new ArrayList<InfoClient>();
-    
-    RemoteGroup(String name)
-    {
+    public List<InfoClient> Clients = new ArrayList<>();
+
+    RemoteGroup(String name) {
         this.name = name;
     }
-    
-    public void JoinGroup(Socket clientSocket)
-    {
-        Clients.add(new InfoClient(clientSocket));
+
+    public void JoinGroup(Socket clientSocket) {
+        boolean boFound = false;
+        for (int i = 0; i < Clients.size(); i++) {
+            if (Clients.get(i).clientLocalAddress == clientSocket.getPort()) {
+                boFound = true;
+            }
+        }
+
+        if (!boFound) {
+            Clients.add(new InfoClient(clientSocket));
+        }
     }
-    
-    public void LeaveGroup(Socket clientSocket)
-    {
-        for (InfoClient temp : Clients) {
-               if(temp.clientLocalAddress == clientSocket.getPort())
-               {
-                   Clients.remove(temp);
-               }
-        }     
+
+    public void LeaveGroup(Socket clientSocket) {
+        for (int i = 0; i < Clients.size(); i++) {
+            if (Clients.get(i).clientLocalAddress == clientSocket.getPort()) {
+                Clients.remove(i);
+            }
+        }
     }
 }

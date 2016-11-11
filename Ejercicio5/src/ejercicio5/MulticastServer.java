@@ -79,33 +79,49 @@ class ServerConnection extends Thread {
                     }
                 } else if (data.equals("sendmsg")) {
                     WasFound = false;
-                    System.out.println("Send Message Command Received");
+                    System.out.println("[DEBUG] Send Message Command Received");
                     data = in.readUTF();
-                    System.out.println("Send Message to Group " + data);
+                    System.out.println("[DEBUG] Send Message to Group " + data);
                     for (RemoteGroup temp : MulticastServer.Remotes) {
-                        System.out.println("Listing Groups " + temp.name);
+                        System.out.println("[DEBUG] Listing Groups " + temp.name);
                         if (temp.name.equals(data)) {
-                            System.out.println("Group " + data + " found.");
+                            System.out.println("[DEBUG] Group " + data + " was found.");
                             WasFound = true;
                             data = in.readUTF();
-                            System.out.println("Message to send " + data);
-                            for (InfoClient tempclient : temp.Clients) {
-                                System.out.println("Sending message to client: " + tempclient.clientLocalAddress);
-                                out = new DataOutputStream(tempclient.clientSocket.getOutputStream());
-                                out.writeUTF(data);
+                            System.out.println("[DEBUG] Message to send: " + data);
+                            boolean boFound = false;
+                            for (int i = 0; i < temp.Clients.size(); i++) {
+                                if (temp.Clients.get(i).clientSocket.getPort() == clientSocket.getPort()) {
+                                    boFound = true;
+                                }
+                            }
+
+                            if (boFound) {
+                                for (InfoClient tempclient : temp.Clients) {
+                                    if (clientSocket.getPort() != tempclient.clientSocket.getPort()) {
+                                        System.out.println("[DEBUG] Sending message to client: " + tempclient.clientLocalAddress);
+                                        out = new DataOutputStream(tempclient.clientSocket.getOutputStream());
+                                        out.writeUTF(data);
+                                    }
+                                }
+                            } else {
+                                System.out.println("[DEBUG] Not allowed to send message to group: " + temp.name);
+                                out = new DataOutputStream(clientSocket.getOutputStream());
+                                out.writeUTF("You are not in that group.");
                             }
                             break;
                         }
                     }
-                    
-                    if(!WasFound)
-                    {
-                        System.out.println("Group " + data + " was not found");
+
+                    if (!WasFound) {
+                        out = new DataOutputStream(clientSocket.getOutputStream());
+                        out.writeUTF("Group " + data + " was not found");
+                        System.out.println("[DEBUG] Group " + data + " was not found");
                     }
-                }else if(data.equals("leavegroup")) {
-                    System.out.println("Leave Group Command Received");
+                } else if (data.equals("leavegroup")) {
+                    System.out.println("[DEBUG] Leave Group Command Received");
                     data = in.readUTF();
-                    System.out.println("Leaving Group Name Command Received " + data);
+                    System.out.println("[DEBUG] Leave Group Name " + data);
                     for (RemoteGroup temp : MulticastServer.Remotes) {
                         if (temp.name.equals(data)) {
                             temp.LeaveGroup(clientSocket);
@@ -115,12 +131,10 @@ class ServerConnection extends Thread {
                     }
 
                     if (!WasFound) {
-                        System.out.println("Leave Group was not found " + data);
+                        System.out.println("[DEBUG] Leave Group was not found " + data);
                     }
-                }
-                else
-                {
-                    System.out.println("Unknown Command");
+                } else {
+                    System.out.println("[DEBUG] Unknown Command");
                 }
                 WasFound = false;
             }

@@ -19,7 +19,7 @@ public class Ejercicio5 {
      */
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
-        System.out.println("1. Act as Server\n2. Act as Client");
+        System.out.println("1. Act as Server\n2. Act as Client\nPlease select an option [2]: ");
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         String s = br.readLine();
         if ("1".equals(s)) {
@@ -27,13 +27,20 @@ public class Ejercicio5 {
             MulticastServer mcServer = new MulticastServer();
             mcServer.run();
         }
-        if ("2".equals(s)) {
+        if ("2".equals(s) || s.isEmpty()) {
             RemoteClient remoteClient = new RemoteClient();
             String serverAddress;
             System.out.println("Client running");
-            System.out.print("Please enter a server ip: ");
+            System.out.print("Please enter a server ip [127.0.0.1]: ");
             serverAddress = br.readLine();
-            remoteClient.run(serverAddress);
+            if(!serverAddress.isEmpty())
+            {
+                remoteClient.run(serverAddress);
+            }
+            else
+            {
+                remoteClient.run("127.0.0.1");
+            }
         }
     }    
 }

@@ -23,6 +23,7 @@ public class RemoteClient
             int serverPort = 7896;
             s = new Socket(ServerAddress, serverPort);
             ClientConnectionRead ReadCon = new ClientConnectionRead(s);
+            out = new DataOutputStream(s.getOutputStream());
             String UserSelection;
             while(true)
             {
@@ -69,7 +70,6 @@ public class RemoteClient
     
     private boolean boJoin(String group) throws IOException
     {
-        out = new DataOutputStream(s.getOutputStream());
         out.writeUTF("joingroup");
         out.writeUTF(group);
         return true;
@@ -77,7 +77,6 @@ public class RemoteClient
     
     private boolean boLeave(String group) throws IOException
     {
-        out = new DataOutputStream(s.getOutputStream());
         out.writeUTF("leavegroup");
         out.writeUTF(group);
         return true;
