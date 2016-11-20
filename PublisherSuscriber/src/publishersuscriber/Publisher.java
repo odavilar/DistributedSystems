@@ -52,7 +52,7 @@ public class Publisher {
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
             String sLine = null;
-            System.out.println("Message format: #topic #topic #topic Message.");
+            System.out.println("Message format: #topic #topic #topic : Message.");
             while(true)
             {        
                 sLine = br.readLine();
