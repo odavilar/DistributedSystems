@@ -37,6 +37,8 @@ public class PublisherSuscriber {
             if ("2".equals(s))
             {
                 System.out.println("Publisher is being launched.");
+                Publisher cPublisher = new Publisher();
+                cPublisher.vRun();
             }
             if ("3".equals(s) || s.isEmpty())
             {

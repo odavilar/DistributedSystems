@@ -56,8 +56,11 @@ class ServerConnection extends Thread {
         try {
             out.writeUTF("Welcome to Publish Suscribe System");
             while (true) {
-                s = in.readLine();
+                System.out.println("[DEBUG] Waiting Message...");
+                s = in.readUTF();
+                System.out.println("[DEBUG] Message received: " + s);
                 out.writeUTF(s);
+                System.out.println("[DEBUG] Message sent.");
             }
         } catch (IOException ex) {
             Logger.getLogger(ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
