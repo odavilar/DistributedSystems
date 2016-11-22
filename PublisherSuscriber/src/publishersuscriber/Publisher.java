@@ -62,44 +62,4 @@ public class Publisher {
             Logger.getLogger(Publisher.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    void vPublish()
-    {
-        
-    }
-}
-
-class IncommingMessage extends Thread {
-
-    DataInputStream in;
-    Socket clientSocket;
-
-    public IncommingMessage(Socket aClientSocket) {
-        try {
-            clientSocket = aClientSocket;
-            in = new DataInputStream(clientSocket.getInputStream());
-            this.start();
-        } catch (IOException e) {
-            System.out.println("Connection:" + e.getMessage());
-        }
-    }
-
-    public void run() {
-        try {
-            while(true)
-            {
-                String data = in.readUTF();
-                System.out.println("Received Message: " + data);
-            }
-        } catch (EOFException e) {
-            System.out.println("EOF:" + e.getMessage());
-        } catch (IOException e) {
-            System.out.println("Readline in thread:" + e.getMessage());
-        } finally {
-            try {
-                clientSocket.close();
-            } catch (IOException e) { /*close failed*/
-            }
-        }
-    }
 }

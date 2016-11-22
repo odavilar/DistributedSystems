@@ -43,6 +43,8 @@ public class PublisherSuscriber {
             if ("3".equals(s) || s.isEmpty())
             {
                 System.out.println("Suscriber is being launched.");
+                Suscriber cSuscriber = new Suscriber();
+                cSuscriber.vRun();
             }
         } catch (IOException ex) {
             Logger.getLogger(PublisherSuscriber.class.getName()).log(Level.SEVERE, null, ex);
