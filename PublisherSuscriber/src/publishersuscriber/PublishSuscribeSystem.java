@@ -95,24 +95,24 @@ class PublisherConnection extends Thread {
         try {
             out.writeUTF("Welcome to Publish Suscribe System");
             while (true) {
-                System.out.println("[DEBUG] Waiting Message...");
+                System.out.println("[DEBUG PublisherConnection] Waiting Message...");
                 s = in.readUTF();
-                System.out.println("[DEBUG] Message received: " + s);
-                Message cMsg = new Message();
+                System.out.println("[DEBUG PublisherConnection] Message received: " + s);
+                PublisherMessage cMsg = new PublisherMessage();
                 if (0 != cMsg.i32ParseMessage(s)) {
                     out.writeUTF("Error parsing message.");
-                    System.out.println("[DEBUG] Error parsing message.");
+                    System.out.println("[DEBUG PublisherConnection] Error parsing message.");
                 } else {
                     for (String temp : cMsg.TopicList) {
                         if (!PublishSuscribeSystem.TopicsTable.containsKey(temp)) {
                             Topic cNewTopic = new Topic(temp);
                             cNewTopic.vAddMsg(cMsg.sMessage);
                             PublishSuscribeSystem.TopicsTable.put(temp, cNewTopic);
-                            System.out.println("[DEBUG] New topic " + cNewTopic.sGetTopicName() + " added with message " + cMsg.sMessage);
+                            System.out.println("[DEBUG PublisherConnection] New topic " + cNewTopic.sGetTopicName() + " added with message " + cMsg.sMessage);
                         } else {
                             Topic cTopic = (Topic) PublishSuscribeSystem.TopicsTable.get(temp);
                             cTopic.vAddMsg(cMsg.sMessage);
-                            System.out.println("[DEBUG] Message added to topic " + cTopic.sGetTopicName());
+                            System.out.println("[DEBUG PublisherConnection] Message added to topic " + cTopic.sGetTopicName());
                         }
                     }
 
@@ -148,8 +148,55 @@ class SuscriberConnection extends Thread {
     }
 
     public void run() {
+        String s = null;
         try {
-            clientSocket.close();
+            out.writeUTF("Welcome to Publish Suscribe System");
+            while (true) {
+                System.out.println("[DEBUG SuscriberConnection] Waiting Message...");
+                s = in.readUTF();
+                System.out.println("[DEBUG SuscriberConnection] Message received: " + s);
+                SuscriberMessage cMsg = new SuscriberMessage();
+                if (0 != cMsg.i32ParseMessage(s)) {
+                    out.writeUTF("Error parsing message.");
+                    System.out.println("[DEBUG SuscriberConnection] Error parsing message.");
+                } else if (cMsg.sCommand.equals("suscribe")) {
+                    for (String temp : cMsg.TopicList) {
+                        if (!PublishSuscribeSystem.TopicsTable.containsKey(temp)) {
+                            Topic cNewTopic = new Topic(temp);
+                            PublishSuscribeSystem.TopicsTable.put(temp, cNewTopic);
+                            System.out.println("[DEBUG SuscriberConnection] New topic " + cNewTopic.sGetTopicName() + " added.");
+                        }
+                        
+                        Topic cTopic = (Topic) PublishSuscribeSystem.TopicsTable.get(temp);
+                        if (!cTopic.boCheckIfSuscriberExist(clientSocket)) {
+                            SuscriberInfo cNewSus = new SuscriberInfo(clientSocket);
+                            cTopic.vAddSuscriber(cNewSus);
+                        }
+                        else
+                        {
+                            out.writeUTF("You are already suscribed to topic " + temp);
+                        }
+                        
+                    }
+                } else if (cMsg.sCommand.equals("unsuscribe")) {
+                    for (String temp : cMsg.TopicList) {
+                        if (!PublishSuscribeSystem.TopicsTable.containsKey(temp)) {
+                            Topic cNewTopic = new Topic(temp);
+                            PublishSuscribeSystem.TopicsTable.put(temp, cNewTopic);
+                            System.out.println("[DEBUG SuscriberConnection] New topic " + cNewTopic.sGetTopicName() + " added.");
+                        }
+                        
+                        Topic cTopic = (Topic) PublishSuscribeSystem.TopicsTable.get(temp);
+                        if (!cTopic.boCheckIfSuscriberExist(clientSocket)) {
+                            cTopic.vDelSuscriber(clientSocket);
+                        }
+                        else
+                        {
+                            out.writeUTF("You are not suscribed to topic " + temp);
+                        }
+                    }
+                }
+            }
         } catch (IOException ex) {
             Logger.getLogger(SuscriberConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -176,9 +223,9 @@ class Topic {
         SuscriberList.add(cNewSus);
     }
 
-    void vDelSuscriber(String sUserName) {
+    void vDelSuscriber(Socket cSocket) {
         for (int i = 0; i < SuscriberList.size(); i++) {
-            if (SuscriberList.get(i).sGetUserName().equals(sUserName)) {
+            if (SuscriberList.get(i).sGetUserSocket().getPort() == cSocket.getPort()) {
                 SuscriberList.remove(i);
             }
         }
@@ -187,28 +234,37 @@ class Topic {
     void vAddMsg(String cMsg) {
         cMessage.add(cMsg);
     }
+
+    boolean boCheckIfSuscriberExist(Socket cSocket) {
+        boolean boRet = false;
+        for (SuscriberInfo temp : SuscriberList) {
+            if (temp.sGetUserSocket().getPort() == cSocket.getPort()) {
+                boRet = true;
+            }
+        }
+        return boRet;
+    }
 }
 
 class SuscriberInfo {
 
-    String sUserName = null;
     Socket cSocket = null;
 
-    SuscriberInfo(String sName) {
-        this.sUserName = sName;
+    SuscriberInfo(Socket cSocket) {
+        this.cSocket = cSocket;
     }
 
-    String sGetUserName() {
-        return sUserName;
+    Socket sGetUserSocket() {
+        return cSocket;
     }
 }
 
-class Message {
+class PublisherMessage {
 
     public List<String> TopicList = null;
     public String sMessage = null;
 
-    Message() {
+    PublisherMessage() {
         TopicList = new ArrayList<>();
         sMessage = new String();
     }
@@ -222,6 +278,39 @@ class Message {
             System.out.println(topics);
             sMessage = m.group(2);
             System.out.println(sMessage);
+            String topicsList[] = topics.split(" ");
+            for (int i = 0; i < topicsList.length; i++) {
+                topicsList[i] = topicsList[i].substring(1);
+                System.out.println(topicsList[i]);
+                TopicList.add(topicsList[i]);
+            }
+        } else {
+            System.out.println("Does not match format");
+            i32Error = -1;
+        }
+
+        return i32Error;
+    }
+}
+
+class SuscriberMessage {
+
+    public List<String> TopicList = null;
+    public String sCommand = null;
+
+    SuscriberMessage() {
+        TopicList = new ArrayList<>();
+        sCommand = new String();
+    }
+
+    public int i32ParseMessage(String sMsg) {
+        int i32Error = 0;
+        Pattern p = Pattern.compile("(\\bsuscribe|\\bunsuscribe)\\s(#.+)");
+        Matcher m = p.matcher(sMsg);
+        if (m.matches()) {
+            sCommand = m.group(1);
+            String topics = m.group(2);
+            System.out.println(sCommand);
             String topicsList[] = topics.split(" ");
             for (int i = 0; i < topicsList.length; i++) {
                 topicsList[i] = topicsList[i].substring(1);
