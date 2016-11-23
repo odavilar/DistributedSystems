@@ -114,6 +114,13 @@ class PublisherConnection extends Thread {
                             cTopic.vAddMsg(cMsg.sMessage);
                             System.out.println("[DEBUG PublisherConnection] Message added to topic " + cTopic.sGetTopicName());
                         }
+                        
+                        Topic cTopic = (Topic) PublishSuscribeSystem.TopicsTable.get(temp);
+                        List<SuscriberInfo> cSuscribers = cTopic.cGetSuscriberList();
+                        for (SuscriberInfo tempSus : cSuscribers) {
+                            DataOutputStream outStream = new DataOutputStream(tempSus.cSocket.getOutputStream());
+                            outStream.writeUTF("Topic: " + temp + " Message: " + cMsg.sMessage);
+                        }
                     }
 
                 }
@@ -187,7 +194,7 @@ class SuscriberConnection extends Thread {
                         }
                         
                         Topic cTopic = (Topic) PublishSuscribeSystem.TopicsTable.get(temp);
-                        if (!cTopic.boCheckIfSuscriberExist(clientSocket)) {
+                        if (cTopic.boCheckIfSuscriberExist(clientSocket)) {
                             cTopic.vDelSuscriber(clientSocket);
                         }
                         else
@@ -244,11 +251,16 @@ class Topic {
         }
         return boRet;
     }
+    
+    public List<SuscriberInfo> cGetSuscriberList()
+    {
+        return SuscriberList;
+    }
 }
 
 class SuscriberInfo {
 
-    Socket cSocket = null;
+    public Socket cSocket = null;
 
     SuscriberInfo(Socket cSocket) {
         this.cSocket = cSocket;
