@@ -115,6 +115,7 @@ class PublisherConnection extends Thread {
                             System.out.println("[DEBUG PublisherConnection] Message added to topic " + cTopic.sGetTopicName());
                         }
                         
+                        /* Notify */
                         Topic cTopic = (Topic) PublishSuscribeSystem.TopicsTable.get(temp);
                         List<SuscriberInfo> cSuscribers = cTopic.cGetSuscriberList();
                         for (SuscriberInfo tempSus : cSuscribers) {
