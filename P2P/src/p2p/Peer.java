@@ -27,29 +27,41 @@ public class Peer {
         System.out.println("PW4PC");
         Peer2ServerConnection P2SConnection = new Peer2ServerConnection();
 
-        try {
-            System.out.println("1. Suscribe to topic: sus topic");
-            System.out.println("2. Unsuscribe to topic: unsus topic");
-            System.out.println("3. Publish topic: pub topic");
-            System.out.println("4. Unpublish topic: unpub topic");
-            System.out.println("5. Get topic: request topic");
+        System.out.println(Color.Green + "Available commands" + Color.ClearFormat);
+        System.out.println("1. Suscribe to topic: sus topic");
+        System.out.println("2. Unsuscribe to topic: unsus topic");
+        System.out.println("3. Publish topic: pub topic");
+        System.out.println("4. Unpublish topic: unpub topic");
+        System.out.println("5. Get topic: request topic");
+        System.out.print("[me@localhost]$ ");
+        this.waitForCommand();
+    }
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            while (true) {
+    void waitForCommand() {
+        boolean boExit = false;
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        while (!boExit) {
+            try {
                 String s = br.readLine();
-                String sArr[] = s.split(" ");
-                System.out.println("Received command: " + sArr[0] + " topic: " + sArr[1]);
-                switch (sArr[0]) {
-                    case "sus":
-                        System.out.println("Command sus.");
-                        break;
-                    default:
-                        System.out.println("Command not recognized.");
-                        break;
+                if (!s.equals("q")) {
+                    String sArr[] = s.split(" ");
+                    System.out.println("Received command: " + sArr[0] + " topic: " + sArr[1]);
+                    switch (sArr[0]) {
+                        case "sus":
+                            System.out.println("Command sus.");
+                            break;
+                        default:
+                            System.out.println("Command not recognized.");
+                            break;
+                    }
+                } else {
+                    boExit = true;
+                    System.out.println("Exit.");
                 }
+            } catch (IOException | ArrayIndexOutOfBoundsException ex) {
+                System.out.println(Color.Red + "Message is in wrong format." + Color.ClearFormat);
+                waitForCommand();
             }
-        } catch (IOException ex) {
-            Logger.getLogger(Peer2ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
@@ -59,7 +71,7 @@ class PeerWait4PeerConnection extends Thread {
     static int listeningPort = 7897; // Peer Listening Port
 
     PeerWait4PeerConnection() {
-        this.run();
+        this.start();
     }
 
     public void run() {
@@ -85,7 +97,7 @@ class Peer2PeerConnectionHandler extends Thread {
 
     Peer2PeerConnectionHandler(Socket socket) {
         System.out.println("Connection accepted from " + socket.getRemoteSocketAddress().toString() + " at port " + socket.getPort());
-        this.run();
+        this.start();
     }
 
     public void run() {
@@ -127,18 +139,18 @@ class Peer2ServerConnection extends Thread {
     DataOutputStream out;
 
     Peer2ServerConnection() {
-        this.run();
+        initConnection();
     }
 
     Peer2ServerConnection(String IpAddress) {
         serverIpAddress = IpAddress;
-        this.run();
+        initConnection();
     }
 
     Peer2ServerConnection(String IpAddress, int Port) {
         serverIpAddress = IpAddress;
         serverPort = Port;
-        this.run();
+        initConnection();
     }
 
     void initConnection() {
@@ -146,14 +158,15 @@ class Peer2ServerConnection extends Thread {
             serverSocket = new Socket(serverIpAddress, serverPort);
             in = new DataInputStream(serverSocket.getInputStream());
             out = new DataOutputStream(serverSocket.getOutputStream());
+            this.start();
         } catch (IOException ex) {
-            Logger.getLogger(Peer2ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(Color.Red + "Error: " + ex.getMessage() + " from Server");
         }
     }
 
     @Override
     public void run() {
-        initConnection();
+
         while (true) {
             /* Wait for response */
             try {
@@ -221,4 +234,29 @@ class Peer2ServerConnection extends Thread {
     static void updateIndex() {
 
     }
+}
+
+class Color {
+
+    static String Black = (char) 27 + "[30m";
+    static String Red = (char) 27 + "[31m";
+    static String Green = (char) 27 + "[32m";
+    static String Yellow = (char) 27 + "[33m";
+    static String Blue = (char) 27 + "[34m";
+    static String Magenta = (char) 27 + "[35m";
+    static String Cyan = (char) 27 + "[36m";
+    static String White = (char) 27 + "[37m";
+    static String BlackBg = (char) 27 + "[40m";
+    static String RedBg = (char) 27 + "[41m";
+    static String GreenBg = (char) 27 + "[42m";
+    static String YellowBg = (char) 27 + "[43m";
+    static String BlueBg = (char) 27 + "[44m";
+    static String MagentaBg = (char) 27 + "[45m";
+    static String CyanBg = (char) 27 + "[46m";
+    static String WhiteBg = (char) 27 + "[47m";
+    static String Bright = (char) 27 + "[1m";
+    static String StopBright = (char) 27 + "[21m";
+    static String Underline = (char) 27 + "[4m";
+    static String StopUnderline = (char) 27 + "[24m";
+    static String ClearFormat = (char) 27 + "[0m";
 }
