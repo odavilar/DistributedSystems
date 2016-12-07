@@ -37,6 +37,70 @@ class PeerMainLoop
             System.out.println("Listen socket:" + e.getMessage());
         }
     }
+    
+    /*
+        Request a topic from a peer.
+    */
+    static void requestTopic()
+    {
+        
+    }
+    
+    /*
+        Sends a topic to a peer.
+    */
+    static void deliverTopic()
+    {
+        
+    }
+    
+    /*
+        Update server index.
+    */
+    static void updateIndex()
+    {
+        
+    }
+    
+    /*
+        Publish topic to a server.
+    */
+    static void publishTopic()
+    {
+        
+    }
+    
+    /*
+        
+    */
+    static void unpublishTopic()
+    {
+        
+    }
+    
+    /*
+        Suscribe peer to topic.
+    */
+    static void suscribeTopic()
+    {
+        
+    }
+    
+    /*
+        Unsuscribe peer from topic.
+    */
+    static void unsuscribeTopic()
+    {
+        
+    }
+    
+    /*
+      Request peers from know topic to the server.  
+    */
+    static void requestPeers()
+    {
+        
+    }
 }
 
 class Peer2PeerConnection extends Thread
