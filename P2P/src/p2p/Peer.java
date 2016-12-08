@@ -10,10 +10,18 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.PatternSyntaxException;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
 
 /**
  *
@@ -21,11 +29,13 @@ import java.util.logging.Logger;
  */
 public class Peer {
 
+    private PeerWait4PeerConnection PW4PConnection;
+    private Peer2ServerConnection P2SConnection;
+
     Peer() {
         System.out.println("New Peer");
-        PeerWait4PeerConnection PW4PConnection = new PeerWait4PeerConnection();
-        System.out.println("PW4PC");
-        Peer2ServerConnection P2SConnection = new Peer2ServerConnection();
+        PW4PConnection = new PeerWait4PeerConnection();
+        P2SConnection = new Peer2ServerConnection();
 
         System.out.println(Color.Green + "Available commands" + Color.ClearFormat);
         System.out.println("1. Suscribe to topic: sus topic");
@@ -48,7 +58,19 @@ public class Peer {
                     System.out.println("Received command: " + sArr[0] + " topic: " + sArr[1]);
                     switch (sArr[0]) {
                         case "sus":
-                            System.out.println("Command sus.");
+                            P2SConnection.suscribeTopic(sArr[1]);
+                            break;
+                        case "unsus":
+                            P2SConnection.unsuscribeTopic(sArr[1]);
+                            break;
+                        case "pub":
+                            P2SConnection.publishTopic(sArr[1]);
+                            break;
+                        case "unpub":
+                            P2SConnection.unpublishTopic(sArr[1]);
+                            break;
+                        case "request":
+                            P2SConnection.requestTopic(sArr[1]);
                             break;
                         default:
                             System.out.println("Command not recognized.");
@@ -134,10 +156,13 @@ class Peer2ServerConnection extends Thread {
 
     Socket serverSocket;
     String serverIpAddress = "127.0.0.1";
-    int serverPort = 7896;
+    int serverPort = 9876;
     DataInputStream in;
     DataOutputStream out;
 
+    JsonArray jaSuscribers;
+    JsonArray jaPeers;
+    
     Peer2ServerConnection() {
         initConnection();
     }
@@ -171,12 +196,43 @@ class Peer2ServerConnection extends Thread {
             /* Wait for response */
             try {
                 String cmd = in.readUTF();
-                switch (cmd) {
+                String cmdArr[];
+                System.out.println(Color.Cyan + cmd);
+                try {
+                    cmdArr = cmd.split(" ", 3);
+                } catch (PatternSyntaxException ex) {
+                    cmdArr = new String[1];
+                    cmdArr[0] = cmd;
+                }
+                switch (cmdArr[0]) {
                     case "OK":
+                        System.out.println(Color.Blue + "Received OK");
+                        if (cmdArr.length > 1) {
+                            if (cmdArr[1].equals("pt")) {
+                                System.out.println("guid: " + cmdArr[2]);
+                            } else if (cmdArr[1].equals("rp")) {
+                                JsonReader jsonReader = Json.createReader(new StringReader(cmdArr[2]));
+                                JsonObject jsonObject = jsonReader.readObject();
+                                for (String key : jsonObject.keySet()) {
+                                    JsonObject tempJsonObj = jsonObject.getJsonObject(key);
+                                    for (String TopicKey : tempJsonObj.keySet()) {
+                                        if(TopicKey.equals("suscribers"))
+                                        {
+                                            jaSuscribers = tempJsonObj.getJsonArray(TopicKey);
+                                        }else if(TopicKey.equals("peers"))
+                                        {
+                                            jaPeers = tempJsonObj.getJsonArray(TopicKey);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         break;
                     case "NOK":
+                        System.out.println(Color.Blue + "Received NOK");
                         break;
                     default:
+                        System.out.println("Received cmd: " + cmd);
                         break;
                 }
             } catch (IOException ex) {
@@ -189,40 +245,65 @@ class Peer2ServerConnection extends Thread {
       Request peers from know topic to the server.  rp topic
       String
      */
-    static void requestPeers() {
-
+    public void requestPeers(String sTopic) {
+        try {
+            System.out.println("Request Peers List");
+            out.writeUTF("rp " + sTopic);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer2ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /*
         Publish topic to a server. pt topic : msg
         return: OK GUID | NOK
      */
-    static void publishTopic() {
-
+    public void publishTopic(String sTopic) {
+        try {
+            System.out.println("Publish topic");
+            out.writeUTF("pt " + sTopic);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer2ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /*
         ut topic
         return: OK | NOK
      */
-    static void unpublishTopic() {
-
+    public void unpublishTopic(String sTopic) {
+        try {
+            System.out.println("Unpublish topic");
+            out.writeUTF("ut " + sTopic);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer2ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /*
         Suscribe peer to topic. st topic
         return: OK | NOK
      */
-    static void suscribeTopic() {
-
+    public void suscribeTopic(String sTopic) {
+        try {
+            System.out.println("Suscribe to topic");
+            out.writeUTF("st " + sTopic);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer2ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /*
         Unsuscribe peer from topic. un topic
         return: OK | NOK
      */
-    static void unsuscribeTopic() {
-
+    public void unsuscribeTopic(String sTopic) {
+        try {
+            System.out.println("Unsuscribe to topic");
+            out.writeUTF("un " + sTopic);
+        } catch (IOException ex) {
+            Logger.getLogger(Peer2ServerConnection.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /*
@@ -231,8 +312,13 @@ class Peer2ServerConnection extends Thread {
         iu add topic
         return: OK | NOK
      */
-    static void updateIndex() {
+    public void updateIndex() {
+        System.out.println("Update index");
+    }
 
+    public void requestTopic(String sTopic) {
+        System.out.println("Request topic");
+        this.requestPeers(sTopic);
     }
 }
 
